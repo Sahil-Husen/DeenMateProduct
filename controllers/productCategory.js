@@ -2,10 +2,10 @@ import ProductCategory from "../models/ProductCategory.js";
 import mongoose from "mongoose";
 
 export const addCategory = async (req, res) => {
-  const { name , description } =  req.body;
-    
-try {
-    const category = await ProductCategory.create({name,description});
+  const { name, description } = req.body;
+
+  try {
+    const category = await ProductCategory.create({ name, description });
     res.status(201).json({ message: "Category Added ", category: category });
   } catch (error) {
     console.log("error :", error);
