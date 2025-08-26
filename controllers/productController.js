@@ -1,50 +1,10 @@
 import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
+import Category from "../models/ProductCategory.js";
 
-// Add product
+// Add Product
 export const addProduct = async (req, res) => {
-  // const {
-  //   name,
-  //   description,
-  //   category,
-  //   price,
-  //   imageUrl,
-  //   inStock,
-  //   tags,
-  //   rating,
-  //   isFeatured,
-  //   isBestseller,
-  //   isTrending,
-  //   isNewArrival,
-  // } = req.body;
-
-  // try {
-  //   const product = await Product.create({
-  //     name,
-  //     description,
-  //     category,
-  //     price,
-  //     imageUrl,
-  //     inStock,
-  //     tags,
-  //     rating,
-  //     isFeatured,
-  //     isBestseller,
-  //     isTrending,
-  //     isNewArrival,
-  //   });
-
-  //   res
-  //     .status(201)
-  //     .json({ message: "Products added Successfully ", product: product });
-  // } catch (error) {
-  //   console.log("error: ", error);
-  //   res
-  //     .status(500)
-  //     .json({ message: "error in Adding Product ", error: error.message });
-  // }
-
   try {
     let imageUrl = " ";
 
@@ -58,7 +18,15 @@ export const addProduct = async (req, res) => {
     } else if (req.body.imageUrl) {
       imageUrl = req.body.imageUrl;
     } else {
-      res.status(404).json({ message: "Image is required and not Uploaded" });
+      return res
+        .status(404)
+        .json({ message: "Image is required and not uploaded" });
+    }
+
+    // Category existence check
+    const categoryExists = await Category.findById(req.body.category);
+    if (!categoryExists) {
+      return res.status(400).json({ message: "Invalid category ID" });
     }
 
     const newProduct = await Product.create({
@@ -98,6 +66,7 @@ export const getCategoryProduct = async (req, res) => {
 
     res.status(200).json({
       message: "Category-wise products fetched successfully",
+      total: products.length,
       products,
     });
   } catch (error) {
