@@ -4,36 +4,103 @@ import fs from "fs";
 import Category from "../models/ProductCategory.js";
 
 // Add Product
+// export const addProduct = async (req, res) => {
+//   try {
+//     let imageUrl = " ";
+
+//     if (req.file) {
+//       const result = await cloudinary.uploader.upload(req.file.path, {
+//         resource_type: "image",
+//         folder: "products.image",
+//       });
+//       imageUrl = result.secure_url;
+//       fs.unlinkSync(req.file.path);
+//     } else if (req.body.imageUrl) {
+//       imageUrl = req.body.imageUrl;
+//     } else {
+//       return res
+//         .status(404)
+//         .json({ message: "Image is required and not uploaded" });
+//     }
+
+//     // Category existence check
+//     const categoryExists = await Category.findById(req.body.category);
+//     if (!categoryExists) {
+//       return res.status(400).json({ message: "Invalid category ID" });
+//     }
+
+//     const newProduct = await Product.create({
+//       name: req.body.name,
+//       price: req.body.price,
+//       category: req.body.category,
+//       imageUrl: imageUrl,
+//       description: req.body.description,
+//       isFeatured: req.body.isFeatured,
+//       isBestseller: req.body.isBestseller,
+//       isTrending: req.body.isTrending,
+//       isNewArrival: req.body.isNewArrival,
+//       inStock: req.body.inStock,
+//       tags: req.body.tags,
+//       rating: req.body.rating,
+//     });
+
+//     res.status(201).json({
+//       message: "Product added successfully",
+//       product: newProduct,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Internal Sever Error in Adding Product ",
+//       error: error.message,
+//     });
+//   }
+// };
+
 export const addProduct = async (req, res) => {
   try {
-    let imageUrl = " ";
+    let imageUrl = "";
 
+    // Step 1: If image is uploaded
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "image",
-        folder: "products.image",
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "products.image",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(req.file.buffer); // use buffer instead of path
       });
+
       imageUrl = result.secure_url;
-      fs.unlinkSync(req.file.path);
-    } else if (req.body.imageUrl) {
+    } 
+    // Step 2: If image URL is provided manually
+    else if (req.body.imageUrl) {
       imageUrl = req.body.imageUrl;
-    } else {
+    } 
+    // Step 3: No image provided at all
+    else {
       return res
         .status(404)
         .json({ message: "Image is required and not uploaded" });
     }
 
-    // Category existence check
+    // Step 4: Category existence check
     const categoryExists = await Category.findById(req.body.category);
     if (!categoryExists) {
       return res.status(400).json({ message: "Invalid category ID" });
     }
 
+    // Step 5: Create Product
     const newProduct = await Product.create({
       name: req.body.name,
       price: req.body.price,
       category: req.body.category,
-      imageUrl: imageUrl,
+      imageUrl,
       description: req.body.description,
       isFeatured: req.body.isFeatured,
       isBestseller: req.body.isBestseller,
@@ -50,11 +117,12 @@ export const addProduct = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Internal Sever Error in Adding Product ",
+      message: "Internal Server Error in Adding Product",
       error: error.message,
     });
   }
 };
+
 
 // get Categorywise Product
 
